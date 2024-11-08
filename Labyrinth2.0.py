@@ -1,6 +1,10 @@
 import pygame
 import sys
 
+from panel.models import Player
+
+from Algorithms_enum import Algorithms
+
 # Initialize Pygame
 pygame.init()
 
@@ -72,6 +76,39 @@ def draw_menu(screen):
 
     pygame.display.flip()
 
+# Choose solution function
+def draw_solution_menu(screen):
+    screen.fill(BACKGROUND)
+    solution_menu_text = font.render("Solve the maze yourself or use an algorithm?", True, WALLS)
+    screen.blit(solution_menu_text, (screen.get_width() // 2 - solution_menu_text.get_width() // 2, 50))
+
+    solve_yourself_text = font.render("1. Solve yourself", True, PLAYER)
+    screen.blit(solve_yourself_text, (screen.get_width() // 2 - solve_yourself_text.get_width() // 2, 150))
+
+    use_algorithm_text = font.render("2. Use algorithm", True, PLAYER)
+    screen.blit(use_algorithm_text, (screen.get_width() // 2 - use_algorithm_text.get_width() // 2, 200))
+    pygame.display.flip()
+
+# Algorithm menu function
+def draw_algorithm_menu(screen):
+    screen.fill(BACKGROUND)
+    algorithm_menu_text = font.render("Choose algorithm", True, WALLS)
+    screen.blit(algorithm_menu_text, (screen.get_width() // 2 - algorithm_menu_text.get_width() // 2, 50))
+
+    dfs_text = font.render("1. DFS", True, PLAYER)
+    screen.blit(dfs_text, (screen.get_width() // 2 - dfs_text.get_width() // 2, 150))
+
+    bfs_text = font.render("2. BFS", True, PLAYER)
+    screen.blit(bfs_text, (screen.get_width() // 2 - bfs_text.get_width() // 2, 200))
+
+    a_star_text = font.render("3. A*", True, PLAYER)
+    screen.blit(a_star_text, (screen.get_width() // 2 - a_star_text.get_width() // 2, 250))
+
+    greedy_text = font.render("4. Greedy Search", True, PLAYER)
+    screen.blit(greedy_text, (screen.get_width() // 2 - greedy_text.get_width() // 2, 300))
+    pygame.display.flip()
+
+
 
 # Labyrinth drawing function
 def draw_labyrinth(screen, labyrinth, player_pos, goal_pos):
@@ -115,7 +152,6 @@ def move_player_continuously(labyrinth, player_pos, dx, dy, last_move_time, move
 def main():
     # Create the screen once, before entering the menu loop
     screen = pygame.display.set_mode((640, 480))
-
     # Menu loop
     menu = True
     selected_map = None
@@ -134,6 +170,49 @@ def main():
                 elif event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+
+    # Solution menu loop
+    solution_menu = True
+    algorithm_solution = False
+    player_solution = False
+    while solution_menu:
+        draw_solution_menu(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    player_solution = True
+                    solution_menu = False
+                elif event.key == pygame.K_2:
+                    algorithm_solution = True
+                    solution_menu = False
+                elif event.key == pygame.K_ESCAPE:
+                    main()
+
+    while algorithm_solution:
+        draw_algorithm_menu(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    Algorithms.BFS
+                    algorithm_solution = False
+                elif event.key == pygame.K_2:
+                    Algorithms.DFS
+                    algorithm_solution = False
+                elif event.key == pygame.K_3:
+                    Algorithms.A_star
+                    algorithm_solution = False
+                elif event.key == pygame.K_4:
+                    Algorithms.Greedy
+                    algorithm_solution = False
+                elif event.key == pygame.K_ESCAPE:
+                    main()
+
 
     # Load selected map
     labyrinth, player_pos, goal_pos = load_map(f"maps\\Map{selected_map + 1}.txt")
