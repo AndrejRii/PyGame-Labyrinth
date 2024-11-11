@@ -2,8 +2,12 @@ import pygame
 import sys
 
 from panel.models import Player
+from pyasn1_modules.rfc7508 import Algorithm
 
 from Algorithms_enum import Algorithms
+
+from greedy_search import greedy_search
+from Astar import astar
 from bfs import bfs  # Assuming bfs is in a separate file
 
 # Initialize Pygame
@@ -25,6 +29,8 @@ maps = ["Map 1", "Map 2", "Map 3", "Map 4", "Map 5"]
 # Cell size in pixels
 CELL_SIZE = 20
 
+Algorithm = None
+
 
 # Load map function
 def load_map(filename):
@@ -42,7 +48,6 @@ def load_map(filename):
                     goal_pos = (y, x)
             labyrinth.append(row)
         return labyrinth, player_pos, goal_pos
-
 
 # Congratulations screen drawing function
 def draw_congratulations(screen):
@@ -109,8 +114,6 @@ def draw_algorithm_menu(screen):
     screen.blit(greedy_text, (screen.get_width() // 2 - greedy_text.get_width() // 2, 300))
     pygame.display.flip()
 
-
-
 # Labyrinth drawing function
 def draw_labyrinth(screen, labyrinth, player_pos, goal_pos):
     screen.fill(BACKGROUND)
@@ -125,7 +128,6 @@ def draw_labyrinth(screen, labyrinth, player_pos, goal_pos):
                                    CELL_SIZE // 2)
 
     pygame.display.flip()
-
 
 # Player movement function
 def move_player(labyrinth, player_pos, dx, dy):
@@ -149,8 +151,31 @@ def move_player_continuously(labyrinth, player_pos, dx, dy, last_move_time, move
             return (new_y, new_x), pygame.time.get_ticks()
     return player_pos, last_move_time
 
+def display_path(path, labyrinth, player_pos, goal_pos, screen):
+    waiting_for_input = True
+    while waiting_for_input:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:  # Enter to make player run to goal
+                    waiting_for_input = False
+
+    if path:
+        # Now move the player along the path
+        for step in path:
+            player_pos = step
+            draw_labyrinth(screen, labyrinth, player_pos,
+                           goal_pos)
+            pygame.display.flip()
+            pygame.time.delay(100)
+    else:
+        main()
+
 # Main program
 def main():
+    global Algorithm
     # Create the screen once, before entering the menu loop
     screen = pygame.display.set_mode((640, 480))
     # Menu loop
@@ -200,20 +225,19 @@ def main():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    Algorithms.BFS
+                    Algorithm = Algorithms.BFS
                     algorithm_solution = False
                 elif event.key == pygame.K_2:
-                    Algorithms.DFS
+                    Algorithm = Algorithms.DFS
                     algorithm_solution = False
                 elif event.key == pygame.K_3:
-                    Algorithms.A_star
+                    Algorithm = Algorithms.A_star
                     algorithm_solution = False
                 elif event.key == pygame.K_4:
-                    Algorithms.Greedy
+                    Algorithm = Algorithms.Greedy
                     algorithm_solution = False
                 elif event.key == pygame.K_ESCAPE:
                     main()
-
 
     # Load selected map
     labyrinth, player_pos, goal_pos = load_map(f"maps\\Map{selected_map + 1}.txt")
@@ -231,29 +255,18 @@ def main():
     while running:
         draw_labyrinth(screen, labyrinth, player_pos, goal_pos)
 
-        if Algorithms.BFS:
+        if Algorithm == Algorithms.Greedy:
             # Run BFS and get the path
+            path = greedy_search(labyrinth, player_pos, goal_pos, screen)
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
+            algorithm_solution = False
+        elif Algorithm == Algorithms.A_star:
+            path = astar(labyrinth, player_pos, goal_pos, screen)
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
+            algorithm_solution = False
+        elif Algorithm == Algorithms.BFS:
             path = bfs(labyrinth, player_pos, goal_pos, screen)
-            if path:
-
-                waiting_for_input = True
-                while waiting_for_input:
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            pygame.quit()
-                            sys.exit()
-                        elif event.type == pygame.KEYDOWN:
-                            if event.key == pygame.K_RETURN:  # Enter to make player run to goal
-                                waiting_for_input = False
-
-                # Now move the player along the path
-                for step in path:
-                    player_pos = step
-                    draw_labyrinth(screen, labyrinth, player_pos,
-                                   goal_pos)
-                    pygame.display.flip()
-                    pygame.time.delay(100)
-
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
             algorithm_solution = False
 
         for event in pygame.event.get():
@@ -283,7 +296,6 @@ def main():
             running = False
             main()
 
-
         # Check if the player has reached the goal
         if player_pos == goal_pos:
             draw_congratulations(screen)
@@ -301,7 +313,6 @@ def main():
                             waiting_for_key = False
                             pygame.quit()
                             sys.exit()
-
 
 # Run the main function
 if __name__ == "__main__":
