@@ -1,13 +1,12 @@
 import pygame
 import sys
-import time
 
-from anyio import sleep
 from panel.models import Player
-from greedy_search import greedy_search
-from Astar import astar
+from pyasn1_modules.rfc7508 import Algorithm
 
 from Algorithms_enum import Algorithms
+from greedy_search import greedy_search
+from Astar import astar
 
 # Initialize Pygame
 pygame.init()
@@ -27,8 +26,6 @@ maps = ["Map 1", "Map 2", "Map 3", "Map 4", "Map 5"]
 
 # Cell size in pixels
 CELL_SIZE = 20
-
-DELAY = 50
 
 Algorithm = None
 
@@ -116,23 +113,17 @@ def draw_algorithm_menu(screen):
     pygame.display.flip()
 
 # Labyrinth drawing function
-def draw_labyrinth(screen, labyrinth, player_pos, goal_pos, display_player=True, optimal_path=[]):
+def draw_labyrinth(screen, labyrinth, player_pos, goal_pos):
     screen.fill(BACKGROUND)
-
     for y, row in enumerate(labyrinth):
         for x, cell in enumerate(row):
             if cell == "█":
                 pygame.draw.rect(screen, WALLS, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
             elif (y, x) == goal_pos:
                 pygame.draw.rect(screen, END, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-            if display_player:
-                if (y, x) == player_pos:
-                    pygame.draw.circle(screen, PLAYER, (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2),
-                                       CELL_SIZE // 2)
-            # Draw the dots for the optimal path
-            if (y, x) in optimal_path:
-                pygame.draw.circle(screen, WALLS, (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2),
-                                   CELL_SIZE // 4)  # Adjust the size of the dot as needed
+            elif (y, x) == player_pos:
+                pygame.draw.circle(screen, PLAYER, (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2),
+                                   CELL_SIZE // 2)
 
     pygame.display.flip()
 
@@ -158,39 +149,27 @@ def move_player_continuously(labyrinth, player_pos, dx, dy, last_move_time, move
             return (new_y, new_x), pygame.time.get_ticks()
     return player_pos, last_move_time
 
-def visualize_path(screen, labyrinth, full_path, optimal_path, goal_pos):
-    # Visualize the full path first
-    for position in full_path:
-        screen.fill(BACKGROUND)
-        draw_labyrinth(screen, labyrinth, position, goal_pos)
-        pygame.display.flip()
-        pygame.time.delay(DELAY)  # Delay in milliseconds
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return  # Allow breaking out to return to the menu
-
-    # After full path, now draw the optimal path
-    for position in optimal_path:
-        screen.fill(BACKGROUND)
-        draw_labyrinth(screen, labyrinth, position, goal_pos, False, optimal_path)  # Draw labyrinth with optimal path
-        pygame.display.flip()
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return  # Allow breaking out to return to the menu
-
-def wait_for_key_to_exit():
-    waiting_for_key = True
-    while waiting_for_key:
+def display_path(path, labyrinth, player_pos, goal_pos, screen):
+    waiting_for_input = True
+    while waiting_for_input:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:  # Enter key to return to menu
-                    waiting_for_key = False
-                    main()  # Return to menu loop
-                elif event.key == pygame.K_ESCAPE:
-                    waiting_for_key = False
+                if event.key == pygame.K_RETURN:  # Enter to make player run to goal
+                    waiting_for_input = False
+
+    if path:
+        # Now move the player along the path
+        for step in path:
+            player_pos = step
+            draw_labyrinth(screen, labyrinth, player_pos,
+                           goal_pos)
+            pygame.display.flip()
+            pygame.time.delay(100)
+    else:
+        main()
 
 # Main program
 def main():
@@ -236,18 +215,6 @@ def main():
                 elif event.key == pygame.K_ESCAPE:
                     main()
 
-    # Load selected map
-    labyrinth, player_pos, goal_pos = load_map(f"maps\\Map{selected_map + 1}.txt")
-
-    # Calculate dynamic screen size based on map dimensions
-    screen_width = len(labyrinth[0]) * CELL_SIZE
-    screen_height = len(labyrinth) * CELL_SIZE
-    screen = pygame.display.set_mode((screen_width, screen_height))
-
-    # Movement delay in milliseconds (0.3 seconds)
-    move_delay = 150
-    last_move_time = pygame.time.get_ticks()  # Time of the last move
-
     while algorithm_solution:
         draw_algorithm_menu(screen)
         for event in pygame.event.get():
@@ -270,59 +237,75 @@ def main():
                 elif event.key == pygame.K_ESCAPE:
                     main()
 
-    if Algorithm == Algorithms.Greedy:
-        full_path, optimal_path = greedy_search(labyrinth, player_pos, goal_pos)
-        visualize_path(screen, labyrinth, full_path, optimal_path, goal_pos)
-        print("Steps taken: ", len(full_path))
-        print("Steps taken optimal path: ", len(optimal_path))
-        wait_for_key_to_exit()
-    elif Algorithm == Algorithms.BFS:
-        wait_for_key_to_exit()
-    elif Algorithm == Algorithms.DFS:
-        wait_for_key_to_exit()
-    elif Algorithm == Algorithms.A_star:
-        full_path, optimal_path = astar(labyrinth, player_pos, goal_pos)
-        visualize_path(screen, labyrinth, full_path, optimal_path, goal_pos)
-        print("Steps taken: ", len(full_path))
-        print("Steps taken optimal path: ", len(optimal_path))
+    # Load selected map
+    labyrinth, player_pos, goal_pos = load_map(f"maps\\Map{selected_map + 1}.txt")
 
-        wait_for_key_to_exit()
-    else:
-        running = True
-        while running:
-            draw_labyrinth(screen, labyrinth, player_pos, goal_pos)
+    # Calculate dynamic screen size based on map dimensions
+    screen_width = len(labyrinth[0]) * CELL_SIZE
+    screen_height = len(labyrinth) * CELL_SIZE
+    screen = pygame.display.set_mode((screen_width, screen_height))
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+    # Movement delay in milliseconds (0.3 seconds)
+    move_delay = 150
+    last_move_time = pygame.time.get_ticks()  # Time of the last move
 
-            # Get the current key states (hold and repeat detection)
-            keys = pygame.key.get_pressed()
+    running = True
+    while running:
+        draw_labyrinth(screen, labyrinth, player_pos, goal_pos)
 
-            # Movement with delay
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, 0, -1, last_move_time,
-                                                                      move_delay)
-            elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, 0, 1, last_move_time,
-                                                                      move_delay)
-            elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, -1, 0, last_move_time,
-                                                                      move_delay)
-            elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, 1, 0, last_move_time,
-                                                                      move_delay)
-            elif keys[pygame.K_r]:
-                labyrinth, player_pos, goal_pos = load_map(f"maps\\Map{selected_map + 1}.txt")
-            elif keys[pygame.K_ESCAPE]:
-                running = False
-                main()
+        if Algorithm == Algorithms.Greedy:
+            # Run BFS and get the path
+            path = greedy_search(labyrinth, player_pos, goal_pos, screen)
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
+            algorithm_solution = False
+        elif Algorithm == Algorithms.A_star:
+            path = astar(labyrinth, player_pos, goal_pos, screen)
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
+            algorithm_solution = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
-            # Check if the player has reached the goal
-            if player_pos == goal_pos:
-                draw_congratulations(screen)
-                wait_for_key_to_exit()
+        # Get the current key states (hold and repeat detection)
+        keys = pygame.key.get_pressed()
+
+        # Movement with delay
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, 0, -1, last_move_time,
+                                                                  move_delay)
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, 0, 1, last_move_time,
+                                                                  move_delay)
+        elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, -1, 0, last_move_time,
+                                                                  move_delay)
+        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            player_pos, last_move_time = move_player_continuously(labyrinth, player_pos, 1, 0, last_move_time,
+                                                                  move_delay)
+        elif keys[pygame.K_r]:
+            labyrinth, player_pos, goal_pos = load_map(f"maps\\Map{selected_map + 1}.txt")
+        elif keys[pygame.K_ESCAPE]:
+            running = False
+            main()
+
+        # Check if the player has reached the goal
+        if player_pos == goal_pos:
+            draw_congratulations(screen)
+            waiting_for_key = True
+            while waiting_for_key:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_RETURN:  # Enter key to return to menu
+                            waiting_for_key = False
+                            main()  # Return to menu loop
+                        elif event.key == pygame.K_ESCAPE:
+                            waiting_for_key = False
+                            pygame.quit()
+                            sys.exit()
 
 # Run the main function
 if __name__ == "__main__":
