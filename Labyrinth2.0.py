@@ -5,8 +5,10 @@ from panel.models import Player
 from pyasn1_modules.rfc7508 import Algorithm
 
 from Algorithms_enum import Algorithms
+
 from greedy_search import greedy_search
 from Astar import astar
+from bfs import bfs  # Assuming bfs is in a separate file
 
 # Initialize Pygame
 pygame.init()
@@ -262,6 +264,11 @@ def main():
             path = astar(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
             algorithm_solution = False
+        elif Algorithm == Algorithms.BFS:
+            path = bfs(labyrinth, player_pos, goal_pos, screen)
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
+            algorithm_solution = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
