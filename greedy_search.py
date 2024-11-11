@@ -63,7 +63,6 @@ def greedy_search(labyrinth, start, goal, screen):
         print(f"Optimal path steps taken: {len(optimal_path)}")
         return optimal_path  # Return the optimal path
 
-        # If there was no goal (goal=None), or the open list is empty and no goal was found, it means there is no path to the goal
     if full_path:
         for step in full_path:
             y, x = step

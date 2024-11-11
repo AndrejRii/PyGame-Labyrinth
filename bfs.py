@@ -17,6 +17,7 @@ def bfs(labyrinth, start, goal, screen):
     queue = deque([Node(start)])
     visited = {start}
     shortest_path = []
+    full_path = []
     steps_taken = 0
 
     while queue:
@@ -24,18 +25,19 @@ def bfs(labyrinth, start, goal, screen):
 
         # Visualize the visited nodes
         y, x = current.position
+        full_path.append(current.position)
         pygame.draw.circle(screen, (200, 200, 100), (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 4)
         pygame.display.flip()
         sleep(0.05)  # Small delay to visualize each visit
         steps_taken += 1
 
         # Check if reached the goal
-        if current.position == goal:
+        if goal and current.position == goal:
             while current:
                 shortest_path.append(current.position)
                 current = current.parent
 
-            # Change color of shortest path to bluee
+            # Change color of shortest path to blue
             for step in shortest_path:
                 y, x = step
                 pygame.draw.circle(screen, (0, 0, 255), (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 4)
@@ -54,4 +56,12 @@ def bfs(labyrinth, start, goal, screen):
                     visited.add(new_position)
                     queue.append(Node(new_position, current))
 
-    return None
+    if full_path:
+        for step in full_path:
+            y, x = step
+            if screen:
+                pygame.draw.circle(screen, (255, 0, 0),
+                                   (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 4)
+        pygame.display.flip()
+    print("No path found (goal not found or unreachable).")
+    return None  # No path found

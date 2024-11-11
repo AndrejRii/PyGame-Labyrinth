@@ -7,7 +7,7 @@ from pyasn1_modules.rfc7508 import Algorithm
 from Algorithms_enum import Algorithms
 
 from greedy_search import greedy_search
-from Astar import astar
+from astar import astar
 from bfs import bfs  # Assuming bfs is in a separate file
 
 # Initialize Pygame
@@ -225,10 +225,10 @@ def main():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    Algorithm = Algorithms.BFS
+                    Algorithm = Algorithms.DFS
                     algorithm_solution = False
                 elif event.key == pygame.K_2:
-                    Algorithm = Algorithms.DFS
+                    Algorithm = Algorithms.BFS
                     algorithm_solution = False
                 elif event.key == pygame.K_3:
                     Algorithm = Algorithms.A_star
@@ -256,15 +256,17 @@ def main():
         draw_labyrinth(screen, labyrinth, player_pos, goal_pos)
 
         if Algorithm == Algorithms.Greedy:
-            # Run BFS and get the path
+            # Run Greedy and get the path
             path = greedy_search(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
             algorithm_solution = False
         elif Algorithm == Algorithms.A_star:
+            # Run Astar and get the path
             path = astar(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
             algorithm_solution = False
         elif Algorithm == Algorithms.BFS:
+            # Run BFS and get the path
             path = bfs(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
             algorithm_solution = False
