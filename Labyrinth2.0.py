@@ -4,6 +4,7 @@ import sys
 from panel.models import Player
 
 from Algorithms_enum import Algorithms
+from bfs import bfs  # Assuming bfs is in a separate file
 
 # Initialize Pygame
 pygame.init()
@@ -229,6 +230,31 @@ def main():
     running = True
     while running:
         draw_labyrinth(screen, labyrinth, player_pos, goal_pos)
+
+        if Algorithms.BFS:
+            # Run BFS and get the path
+            path = bfs(labyrinth, player_pos, goal_pos, screen)
+            if path:
+
+                waiting_for_input = True
+                while waiting_for_input:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+                        elif event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_RETURN:  # Enter to make player run to goal
+                                waiting_for_input = False
+
+                # Now move the player along the path
+                for step in path:
+                    player_pos = step
+                    draw_labyrinth(screen, labyrinth, player_pos,
+                                   goal_pos)
+                    pygame.display.flip()
+                    pygame.time.delay(100)
+
+            algorithm_solution = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
