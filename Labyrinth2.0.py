@@ -259,16 +259,19 @@ def main():
             # Run Greedy and get the path
             path = greedy_search(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
+            player_pos = goal_pos
             algorithm_solution = False
         elif Algorithm == Algorithms.A_star:
             # Run Astar and get the path
             path = astar(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
+            player_pos = goal_pos
             algorithm_solution = False
         elif Algorithm == Algorithms.BFS:
             # Run BFS and get the path
             path = bfs(labyrinth, player_pos, goal_pos, screen)
             display_path(path, labyrinth, player_pos, goal_pos, screen)
+            player_pos = goal_pos
             algorithm_solution = False
 
         for event in pygame.event.get():
