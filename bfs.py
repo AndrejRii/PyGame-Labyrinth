@@ -1,6 +1,7 @@
 from collections import deque
 
 import pygame
+from time import sleep
 
 
 class Node:
@@ -10,9 +11,7 @@ class Node:
 
 CELL_SIZE = 20
 
-
 def bfs(labyrinth, start, goal, screen):
-    from time import sleep
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     queue = deque([Node(start)])
     visited = {start}
