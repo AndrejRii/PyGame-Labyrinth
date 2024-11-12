@@ -8,7 +8,8 @@ from Algorithms_enum import Algorithms
 
 from greedy_search import greedy_search
 from astar import astar
-from bfs import bfs  # Assuming bfs is in a separate file
+from bfs import bfs
+from dfs import dfs
 
 # Initialize Pygame
 pygame.init()
@@ -273,6 +274,13 @@ def main():
             display_path(path, labyrinth, player_pos, goal_pos, screen)
             player_pos = goal_pos
             algorithm_solution = False
+        elif Algorithm == Algorithms.DFS:
+            # Run DFS and get the path
+            path = dfs(labyrinth, player_pos, goal_pos, screen)
+            display_path(path, labyrinth, player_pos, goal_pos, screen)
+            player_pos = goal_pos
+            algorithm_solution = False
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
