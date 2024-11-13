@@ -2,17 +2,18 @@ import heapq
 import pygame
 import time
 
-from greedy_search import CELL_SIZE
-
-
 def heuristic(pos, goal):
     if goal is None:
         return 0
     # heuristic function: manhattan distance to the goal
     return abs(pos[0] - goal[0]) + abs(pos[1] - goal[1])
 
+pygame.init()
 
-cell_size = 20
+OFFSET_Y = 50
+CELL_SIZE = 20
+DELAY = 0.1
+FONT2 = pygame.font.Font(None, 25)
 
 
 def astar(labyrinth, start, goal, screen):
@@ -36,12 +37,24 @@ def astar(labyrinth, start, goal, screen):
         # visualize the visited nodes (like bfs and greedy search)
         y, x = current
         full_path.append(current)
-        pygame.draw.circle(screen, (200, 200, 100), (x * cell_size + cell_size // 2, y * cell_size + cell_size // 2),
-                           cell_size // 4)
-        pygame.display.flip()
-        time.sleep(0.05)  # small delay to visualize each visit
-
         steps_taken += 1
+
+        pygame.draw.rect(screen, (20, 20, 30), (0, 0, 1000, 50))
+
+        mode_text = FONT2.render(f"Mode: A*", True, (200, 200, 200))
+        algo_steps_text = FONT2.render(f"Algo steps: {steps_taken}", True, (200, 200, 200))
+        steps_taken_text = FONT2.render(f"Steps taken: 0", True, (200, 200, 200))
+
+        screen.blit(mode_text, (10, 15))
+        screen.blit(algo_steps_text, (135, 15))
+        screen.blit(steps_taken_text, (275, 15))
+
+        pygame.draw.circle(screen, (200, 200, 100), (x * CELL_SIZE + CELL_SIZE // 2, (y * CELL_SIZE + CELL_SIZE // 2) + OFFSET_Y),
+                           CELL_SIZE // 4)
+        pygame.display.flip()
+        time.sleep(DELAY)  # small delay to visualize each visit
+
+
 
         # check if the goal has been reached
         if goal and current == goal:
@@ -77,18 +90,18 @@ def astar(labyrinth, start, goal, screen):
             y, x = step
             if screen:
                 pygame.draw.circle(screen, (0, 0, 255),
-                                   (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 4)
+                                   (x * CELL_SIZE + CELL_SIZE // 2, (y * CELL_SIZE + CELL_SIZE // 2) + OFFSET_Y), CELL_SIZE // 4)
         pygame.display.flip()
         print(f"Total steps taken: {steps_taken}")
         print(f"Optimal path steps taken: {len(optimal_path)}")
-        return optimal_path  # Return the optimal path
+        return optimal_path, steps_taken  # Return the optimal path
 
     if full_path:
         for step in full_path:
             y, x = step
             if screen:
                 pygame.draw.circle(screen, (255, 0, 0),
-                                   (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 4)
+                                   (x * CELL_SIZE + CELL_SIZE // 2, (y * CELL_SIZE + CELL_SIZE // 2) + OFFSET_Y), CELL_SIZE // 4)
         pygame.display.flip()
     print("No path found (goal not found or unreachable).")
-    return None  # No path found
+    return None, None  # No path found
