@@ -3,8 +3,6 @@ import sys
 
 from docutils.nodes import header
 from panel.models import Player
-from pyasn1_modules.rfc7508 import Algorithm
-
 from Algorithms_enum import Algorithms
 
 from greedy_search import greedy_search
@@ -26,13 +24,13 @@ FONT = pygame.font.Font(None, 36)
 FONT2 = pygame.font.Font(None, 25)
 
 # Map list
-maps = ["Map 1", "Map 2", "Map 3", "Map 4", "Map 5"]
+maps = ["Map 1", "Map 2", "Map 3", "Map 4", "Map 5", "Map 6", "Map 7"]
 
 # Cell size in pixels
 CELL_SIZE = 20
 
 OFFSET_Y = 50
-Algorithm = None
+Algorithm: Algorithms | None = None
 
 
 # Load map function
@@ -125,7 +123,7 @@ def draw_labyrinth(screen, labyrinth, player_pos, goal_pos, steps_taken = 0, alg
     screen.fill(BACKGROUND)
 
     if algo_header:
-        mode_text = FONT2.render(f"Mode: {Algorithm.name}", True, WALLS)
+        mode_text = FONT2.render(f"Mode: {Algorithm.value}", True, WALLS)
         algo_steps_text = FONT2.render(f"Algo steps: {algo_steps}", True, WALLS)
         steps_taken_text = FONT2.render(f"Steps taken: {steps_taken}", True, WALLS)
 
@@ -217,7 +215,7 @@ def main():
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5):
+                if event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6,pygame.K_7):
                     selected_map = int(event.unicode) - 1  # Choose map index based on number key
                     menu = False
                 elif event.key == pygame.K_ESCAPE:
