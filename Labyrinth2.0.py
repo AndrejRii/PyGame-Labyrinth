@@ -278,7 +278,16 @@ def main():
 
     steps_taken = 0
     running = True
+    pygame.mixer.init()
+
+    # Load the MP3 sound file
+    sound = pygame.mixer.Sound('Bad Piggies main theme but it never starts.mp3')
+
+    # Play the sound in a loop (-1 means infinite looping)
+    sound.play(loops=-1)
+
     while running:
+
         if Algorithm is None:
             draw_labyrinth(screen, labyrinth, player_pos, goal_pos, steps_taken, False)
         else:
@@ -349,6 +358,7 @@ def main():
 
         # Check if the player has reached the goal
         if player_pos == goal_pos:
+            sound.stop()
             draw_congratulations(screen, steps_taken)
             waiting_for_key = True
             while waiting_for_key:
