@@ -89,3 +89,80 @@ def greedy_search(labyrinth, start, goal, screen):
         pygame.display.flip()
     print("No path found (goal not found or unreachable).")
     return None, None  # No path found
+
+
+def greedy_search_no_visual(labyrinth, start, goal):
+    visited = set()
+    optimal_path = []  # List to record the optimal path without dead-ends
+    stack = [(heuristic(start, goal), start, [start])]  # Priority queue as (heuristic, position, path_taken)
+
+    while stack:
+        # Sort stack to always explore the lowest heuristic first
+        stack.sort(reverse=True)
+        _, current, path_taken = stack.pop()
+
+        # Check if the goal has been reached
+        if goal and current == goal:
+            optimal_path = path_taken  # Record the optimal path (straight path from start to goal)
+            break  # Exit the loop once the goal is found
+
+        # Mark the current node as visited
+        visited.add(current)
+
+        # Explore neighbors in the order (up, down, left, right) sorted by heuristic
+        neighbors = []
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            new_pos = (current[0] + dx, current[1] + dy)
+            if (0 <= new_pos[0] < len(labyrinth) and
+                0 <= new_pos[1] < len(labyrinth[0]) and
+                labyrinth[new_pos[0]][new_pos[1]] != "█" and
+                new_pos not in visited):
+                neighbors.append((heuristic(new_pos, goal), new_pos, path_taken + [new_pos]))
+
+        # If there are valid neighbors, continue exploring
+        if neighbors:
+            stack.extend(neighbors)
+
+    # Return results
+    if optimal_path:
+        return optimal_path, len(visited)  # Optimal path and steps taken
+    return None, None  # No path found
+
+# Load map function
+def load_map(filename):
+    with open(filename, "r", encoding="utf-8") as file:
+        labyrinth = []
+        player_pos = None
+        goal_pos = None
+        for y, line in enumerate(file):
+            row = []
+            for x, char in enumerate(line.strip()):
+                row.append(char)
+                if char == "P":
+                    player_pos = (y, x)
+                elif char == "G":
+                    goal_pos = (y, x)
+            labyrinth.append(row)
+        return labyrinth, player_pos, goal_pos
+
+def main():
+    # Load map from file
+    labyrinth, start, goal = load_map("maps/Map2.txt")  # Replace "maze.txt" with your file name
+
+    # Measure execution time
+    start_time = time.perf_counter()
+    optimal_path, steps_taken = greedy_search_no_visual(labyrinth, start, goal)
+    end_time = time.perf_counter()
+
+    # Print results
+    if optimal_path:
+        print(f"Solution found in {steps_taken} steps.")
+        print(f"Optimal path length: {len(optimal_path)}")
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
+    else:
+        print("No solution found.")
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
+
+
+if __name__ == "__main__":
+    main()

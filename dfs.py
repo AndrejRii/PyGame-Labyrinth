@@ -1,5 +1,6 @@
 import pygame
 from time import sleep
+import time
 
 
 class Node:
@@ -78,3 +79,75 @@ def dfs(labyrinth, start, goal, screen):
         pygame.display.flip()
     print("No path found (goal not found or unreachable).")
     return None, None  # No path found
+
+def dfs_no_visual(labyrinth, start, goal):
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    stack = [Node(start)]  # Use a stack instead of a queue
+    visited = {start}
+    shortest_path = []
+    full_path = []
+    steps_taken = 0
+
+    while stack:
+        current = stack.pop()
+
+        # Visualize the visited node
+        full_path.append(current.position)
+        steps_taken += 1
+
+        # Check if reached the goal
+        if goal and current.position == goal:
+            while current:
+                shortest_path.append(current.position)
+                current = current.parent
+
+            return shortest_path[::-1], steps_taken  # Return the reversed path to start -> goal
+
+        for new_y, new_x in directions:
+            new_position = (current.position[0] + new_y, current.position[1] + new_x)
+
+            if 0 <= new_position[0] < len(labyrinth) and 0 <= new_position[1] < len(labyrinth[0]) and labyrinth[new_position[0]][new_position[1]] != "█":
+                if new_position not in visited:
+                    visited.add(new_position)
+                    stack.append(Node(new_position, current))
+
+    return None, None  # No path found
+
+# Load map function
+def load_map(filename):
+    with open(filename, "r", encoding="utf-8") as file:
+        labyrinth = []
+        player_pos = None
+        goal_pos = None
+        for y, line in enumerate(file):
+            row = []
+            for x, char in enumerate(line.strip()):
+                row.append(char)
+                if char == "P":
+                    player_pos = (y, x)
+                elif char == "G":
+                    goal_pos = (y, x)
+            labyrinth.append(row)
+        return labyrinth, player_pos, goal_pos
+
+def main():
+    # Load map from file
+    labyrinth, start, goal = load_map("maps/Map4.txt")  # Replace "maze.txt" with your file name
+
+    # Measure execution time
+    start_time = time.perf_counter()
+    optimal_path, steps_taken = dfs_no_visual(labyrinth, start, goal)
+    end_time = time.perf_counter()
+
+    # Print results
+    if optimal_path:
+        print(f"Solution found in {steps_taken} steps.")
+        print(f"Optimal path length: {len(optimal_path)}")
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
+    else:
+        print("No solution found.")
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
+
+
+if __name__ == "__main__":
+    main()
