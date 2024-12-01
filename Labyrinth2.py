@@ -82,7 +82,7 @@ def draw_menu(screen):
 
     # Draw the ESC key instruction
     esc_text = FONT2.render("Press Escape key to quit game", True, WALLS)
-    screen.blit(esc_text, (screen.get_width() // 2 - esc_text.get_width() // 2, 150 + len(maps) * 40 + 40))
+    screen.blit(esc_text, (screen.get_width() // 2 - esc_text.get_width() // 2, 150 + len(maps) * 40 + 10))
 
     pygame.display.flip()
 
