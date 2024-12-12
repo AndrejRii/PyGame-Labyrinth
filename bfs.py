@@ -3,7 +3,7 @@ from collections import deque
 import pygame
 from time import sleep
 import time
-
+import tracemalloc
 
 class Node:
     def __init__(self, position, parent=None):
@@ -46,7 +46,6 @@ def bfs(labyrinth, start, goal, screen):
         pygame.draw.circle(screen, (200, 200, 100), (x * CELL_SIZE + CELL_SIZE // 2, (y * CELL_SIZE + CELL_SIZE // 2) + OFFSET_Y), CELL_SIZE // 4)
         pygame.display.flip()
         sleep(DELAY)  # Small delay to visualize each visit
-
 
         # Check if reached the goal
         if goal and current.position == goal:
@@ -91,23 +90,31 @@ def bfs_no_visual(labyrinth, start, goal):
     shortest_path = []
     full_path = []
     steps_taken = 0
+    memory_snapshots = []
+    tracemalloc.start()
 
     while queue:
         current = queue.popleft()
 
-        # Visualize the visited nodes
         y, x = current.position
         full_path.append(current.position)
         steps_taken += 1
 
+        current_memory, _ = tracemalloc.get_traced_memory()
+        memory_snapshots.append(current_memory)
 
         # Check if reached the goal
         if goal and current.position == goal:
             while current:
                 shortest_path.append(current.position)
                 current = current.parent
+            _, peak_memory = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            average_memory = sum(memory_snapshots) / len(memory_snapshots)
 
-            return shortest_path[::-1], steps_taken  # Return the reversed path to start -> goal
+            print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+            print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+            return shortest_path[::-1], steps_taken
 
         for new_y, new_x in directions:
             new_position = (current.position[0] + new_y, current.position[1] + new_x)

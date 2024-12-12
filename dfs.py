@@ -1,6 +1,7 @@
 import pygame
 from time import sleep
 import time
+import tracemalloc
 
 
 class Node:
@@ -26,7 +27,6 @@ def dfs(labyrinth, start, goal, screen):
     while stack:
         current = stack.pop()
 
-        # Visualize the visited nodes
         y, x = current.position
         full_path.append(current.position)
         steps_taken += 1
@@ -45,13 +45,11 @@ def dfs(labyrinth, start, goal, screen):
         pygame.display.flip()
         sleep(DELAY)  # Small delay to visualize each visit
 
-        # Check if reached the goal
         if goal and current.position == goal:
             while current:
                 shortest_path.append(current.position)
                 current = current.parent
 
-            # Change color of shortest path to blue
             for step in shortest_path:
                 y, x = step
                 pygame.draw.circle(screen, (0, 0, 255), (x * CELL_SIZE + CELL_SIZE // 2, (y * CELL_SIZE + CELL_SIZE // 2) + OFFSET_Y), CELL_SIZE // 4)
@@ -87,13 +85,17 @@ def dfs_no_visual(labyrinth, start, goal):
     shortest_path = []
     full_path = []
     steps_taken = 0
+    memory_snapshots = []
+    tracemalloc.start()
 
     while stack:
         current = stack.pop()
 
-        # Visualize the visited node
         full_path.append(current.position)
         steps_taken += 1
+
+        current_memory, _ = tracemalloc.get_traced_memory()
+        memory_snapshots.append(current_memory)
 
         # Check if reached the goal
         if goal and current.position == goal:
@@ -101,7 +103,13 @@ def dfs_no_visual(labyrinth, start, goal):
                 shortest_path.append(current.position)
                 current = current.parent
 
-            return shortest_path[::-1], steps_taken  # Return the reversed path to start -> goal
+            _, peak_memory = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            average_memory = sum(memory_snapshots) / len(memory_snapshots)
+
+            print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+            print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+            return shortest_path[::-1], steps_taken
 
         for new_y, new_x in directions:
             new_position = (current.position[0] + new_y, current.position[1] + new_x)
@@ -111,9 +119,14 @@ def dfs_no_visual(labyrinth, start, goal):
                     visited.add(new_position)
                     stack.append(Node(new_position, current))
 
-    return None, None  # No path found
+    _, peak_memory = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    average_memory = sum(memory_snapshots) / len(memory_snapshots) if memory_snapshots else 0
 
-# Load map function
+    print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+    print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+    return None, None # No path found
+
 def load_map(filename):
     with open(filename, "r", encoding="utf-8") as file:
         labyrinth = []
@@ -131,15 +144,12 @@ def load_map(filename):
         return labyrinth, player_pos, goal_pos
 
 def main():
-    # Load map from file
-    labyrinth, start, goal = load_map("maps/Map4.txt")  # Replace "maze.txt" with your file name
+    labyrinth, start, goal = load_map("maps/Map4.txt")
 
-    # Measure execution time
     start_time = time.perf_counter()
     optimal_path, steps_taken = dfs_no_visual(labyrinth, start, goal)
     end_time = time.perf_counter()
 
-    # Print results
     if optimal_path:
         print(f"Solution found in {steps_taken} steps.")
         print(f"Optimal path length: {len(optimal_path)}")
