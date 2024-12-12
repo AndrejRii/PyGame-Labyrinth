@@ -1,6 +1,8 @@
 import heapq
 import pygame
 import time
+import tracemalloc
+
 
 def heuristic(pos, goal):
     if goal is None:
@@ -111,6 +113,8 @@ def astar_no_visualization(labyrinth, start, goal):
     visited = set()  # set of visited nodes
     optimal_path = []  # list to record the optimal path without dead-ends
     full_path = []  # track all visited nodes
+    memory_snapshots = []
+    tracemalloc.start()
 
     # priority queue (open list), storing (f, g, position, path_taken)
     # f = g + h where g is the cost from start, h is the heuristic (estimated cost to goal)
@@ -125,6 +129,9 @@ def astar_no_visualization(labyrinth, start, goal):
     while open_list:
         _, g, current, path_taken = heapq.heappop(open_list)
 
+        current_memory, _ = tracemalloc.get_traced_memory()
+        memory_snapshots.append(current_memory)
+
         # Track visited nodes and steps
         full_path.append(current)
         steps_taken += 1
@@ -132,6 +139,14 @@ def astar_no_visualization(labyrinth, start, goal):
         # Check if the goal has been reached
         if goal and current == goal:
             optimal_path = path_taken  # record the optimal path (straight path from start to goal)
+
+            _, peak_memory = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            average_memory = sum(memory_snapshots) / len(memory_snapshots)
+
+            print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+            print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+
             break  # exit the loop once the goal is found
 
         # Mark the current node as visited
@@ -162,6 +177,13 @@ def astar_no_visualization(labyrinth, start, goal):
         return optimal_path, steps_taken  # Return the optimal path and steps taken
 
     # If no path was found
+    _, peak_memory = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    average_memory = sum(memory_snapshots) / len(memory_snapshots)
+
+    print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+    print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+
     return None, steps_taken  # Indicate failure and steps taken
 
 # Load map function
@@ -183,7 +205,7 @@ def load_map(filename):
 
 def main():
     # Load map from file
-    labyrinth, start, goal = load_map("maps/Map2.txt")  # Replace "maze.txt" with your file name
+    labyrinth, start, goal = load_map("maps/Map7.txt")
 
     # Measure execution time
     start_time = time.perf_counter()

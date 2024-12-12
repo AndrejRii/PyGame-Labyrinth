@@ -1,5 +1,6 @@
 import pygame
 import time
+import tracemalloc
 
 def heuristic(pos, goal):
     if goal is None:
@@ -95,15 +96,28 @@ def greedy_search_no_visual(labyrinth, start, goal):
     visited = set()
     optimal_path = []  # List to record the optimal path without dead-ends
     stack = [(heuristic(start, goal), start, [start])]  # Priority queue as (heuristic, position, path_taken)
+    memory_snapshots = []
+    tracemalloc.start()
 
     while stack:
         # Sort stack to always explore the lowest heuristic first
         stack.sort(reverse=True)
         _, current, path_taken = stack.pop()
 
+        current_memory, _ = tracemalloc.get_traced_memory()
+        memory_snapshots.append(current_memory)
+
         # Check if the goal has been reached
         if goal and current == goal:
             optimal_path = path_taken  # Record the optimal path (straight path from start to goal)
+
+            _, peak_memory = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            average_memory = sum(memory_snapshots) / len(memory_snapshots)
+
+            print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+            print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+
             break  # Exit the loop once the goal is found
 
         # Mark the current node as visited
@@ -126,6 +140,14 @@ def greedy_search_no_visual(labyrinth, start, goal):
     # Return results
     if optimal_path:
         return optimal_path, len(visited)  # Optimal path and steps taken
+
+    _, peak_memory = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    average_memory = sum(memory_snapshots) / len(memory_snapshots) if memory_snapshots else 0
+
+    print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+    print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+
     return None, None  # No path found
 
 # Load map function
@@ -147,7 +169,7 @@ def load_map(filename):
 
 def main():
     # Load map from file
-    labyrinth, start, goal = load_map("maps/Map2.txt")  # Replace "maze.txt" with your file name
+    labyrinth, start, goal = load_map("maps/Map5.txt")
 
     # Measure execution time
     start_time = time.perf_counter()
