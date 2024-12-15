@@ -124,6 +124,13 @@ def bfs_no_visual(labyrinth, start, goal):
                     visited.add(new_position)
                     queue.append(Node(new_position, current))
 
+    _, peak_memory = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+    average_memory = sum(memory_snapshots) / len(memory_snapshots) if memory_snapshots else 0
+
+    print(f"Peak Memory Usage: {peak_memory / 1024:.2f} KB")
+    print(f"Average Memory Usage: {average_memory / 1024:.2f} KB")
+
     return None, None  # No path found
 
 
@@ -146,7 +153,7 @@ def load_map(filename):
 
 def main():
     # Load map from file
-    labyrinth, start, goal = load_map("maps/Map4.txt")  # Replace "maze.txt" with your file name
+    labyrinth, start, goal = load_map("maps/Map4.txt")
 
     # Measure execution time
     start_time = time.perf_counter()
